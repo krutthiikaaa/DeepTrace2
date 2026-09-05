@@ -1,0 +1,10 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+uploads/*
+!uploads/.gitkeep
+results/*
+!results/.gitkeep
+models/checkpoints/*
+!models/checkpoints/.gitkeep

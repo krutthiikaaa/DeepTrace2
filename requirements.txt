@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+torch
+opencv-python
+onnx
+onnx2pytorch
+numpy
+timm
+scipy
