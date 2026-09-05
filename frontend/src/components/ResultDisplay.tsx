@@ -1,6 +1,8 @@
 import React from 'react';
 import { DetectionResult, VideoDetectionResult } from '../types/detection';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
+import ImageReport from './ImageReport';
+import { ImageDetectionResult } from '../types/detection';
 
 interface Props {
   result: DetectionResult | null;
@@ -8,6 +10,10 @@ interface Props {
 
 const ResultDisplay: React.FC<Props> = ({ result }) => {
   if (!result) return null;
+
+  if (result.media_type === 'image') {
+    return <ImageReport result={result as ImageDetectionResult} />;
+  }
 
   const isReal = result.prediction === 'REAL';
 
