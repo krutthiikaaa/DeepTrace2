@@ -1,8 +1,8 @@
 import React from 'react';
-import { DetectionResult, VideoDetectionResult } from '../types/detection';
+import type { DetectionResult, VideoDetectionResult } from '../types/detection';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
 import ImageReport from './ImageReport';
-import { ImageDetectionResult } from '../types/detection';
+import type { ImageDetectionResult } from '../types/detection';
 
 interface Props {
   result: DetectionResult | null;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ImageDetectionResult, RiskAssessment } from '../types/detection';
+import type { ImageDetectionResult } from '../types/detection';
 
 interface Props {
   result: ImageDetectionResult;
@@ -24,11 +24,6 @@ const ForensicEvidence: React.FC<Props> = ({ result }) => {
     else if (status === 'NO_CLEAR_ANOMALY' || status === 'CONSISTENT') badgeClass = 'clear';
     
     return <span className={`status-badge ${badgeClass}`}>{cleanStatus}</span>;
-  };
-
-  const getStatusString = (moduleData: any) => {
-    if (!moduleData || !moduleData.available) return 'UNAVAILABLE';
-    return moduleData.status || (moduleData.error ? 'UNAVAILABLE' : 'AVAILABLE');
   };
 
   // The backend currently might not directly put 'status' on the root of the forensic object unless it's in the new risk items.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageDetectionResult } from '../types/detection';
+import type { ImageDetectionResult } from '../types/detection';
 import ForensicEvidence from './ForensicEvidence';
 import { AlertTriangle, Info, CheckCircle, Search, FileSearch } from 'lucide-react';
 
@@ -29,7 +29,6 @@ const ImageReport: React.FC<Props> = ({ result }) => {
   // Determining Risk UI
   const isHigh = risk.risk_level === 'HIGH_RISK';
   const isLow = risk.risk_level === 'LOW_RISK';
-  const isReview = risk.risk_level === 'REVIEW_REQUIRED';
 
   let riskIcon = <Info size={32} />;
   if (isHigh) riskIcon = <AlertTriangle size={32} />;

@@ -3,7 +3,7 @@ import BackendStatus from './components/BackendStatus';
 import DetectionTabs from './components/DetectionTabs';
 import MediaUploader from './components/MediaUploader';
 import ResultDisplay from './components/ResultDisplay';
-import { DetectionResult } from './types/detection';
+import type { DetectionResult } from './types/detection';
 import { AlertCircle } from 'lucide-react';
 
 function App() {
@@ -31,7 +31,7 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <div className="header-content">
-          <h1>DeepTrace</h1>
+          <h1>DeepTrace: KYC Media Authenticity & Risk Analyzer</h1>
           <BackendStatus />
         </div>
       </header>

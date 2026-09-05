@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { HealthStatus, ImageDetectionResult, VideoDetectionResult, AudioDetectionResult } from '../types/detection';
+import type { HealthStatus, ImageDetectionResult, VideoDetectionResult, AudioDetectionResult } from '../types/detection';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
