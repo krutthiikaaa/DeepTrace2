@@ -54,6 +54,39 @@ export interface FaceEyeForensics {
   error?: string;
 }
 
+export type RiskLevel = "LOW_RISK" | "REVIEW_REQUIRED" | "HIGH_RISK";
+export type EvidenceAgreement = "STRONG_SUPPORT" | "MODERATE_SUPPORT" | "MIXED" | "INSUFFICIENT_EVIDENCE";
+
+export interface AISignal {
+  prediction: "REAL" | "FAKE";
+  confidence: number;
+  strength: "STRONG" | "MODERATE" | "WEAK";
+}
+
+export interface EvidenceSummary {
+  supporting_signals: number;
+  conflicting_signals: number;
+  unavailable_signals: number;
+}
+
+export interface EvidenceItem {
+  source: string;
+  status: string;
+  message: string;
+  supports_risk: boolean | null;
+}
+
+export interface RiskAssessment {
+  risk_level: RiskLevel;
+  overall_status: RiskLevel;
+  signal_agreement: EvidenceAgreement;
+  review_recommended: boolean;
+  ai_signal: AISignal;
+  evidence_summary: EvidenceSummary;
+  evidence_items: EvidenceItem[];
+  explanation: string;
+}
+
 export interface ImageDetectionResult extends BaseDetectionResult {
   media_type: "image";
   forensics?: {
@@ -62,6 +95,7 @@ export interface ImageDetectionResult extends BaseDetectionResult {
     fft?: FFTForensics;
     face_eye?: FaceEyeForensics;
   };
+  risk_assessment?: RiskAssessment;
 }
 
 export interface AudioDetectionResult extends BaseDetectionResult {
