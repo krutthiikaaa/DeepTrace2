@@ -1,8 +1,4 @@
-
-from cv2.utils import logging
-from multiprocessing import resource_sharer
-import resource
-source .venv/bin/activateimport logging
+import logging
 # pyrefly: ignore [missing-import]
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from backend.services.video_detector import detect_video

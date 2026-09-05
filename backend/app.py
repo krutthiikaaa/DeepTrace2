@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI
@@ -37,13 +38,25 @@ class DummyArgs:
     freeze_audio_encoder = False
 
 def load_models():
+    checkpoint_dir = "models/checkpoints"
+    onnx_path = os.path.join(checkpoint_dir, "efficientnet.onnx")
+    ckpt_path = os.path.join(checkpoint_dir, "model.pth")
+
+    if not (os.path.isfile(onnx_path) and os.path.isfile(ckpt_path)):
+        logger.warning(
+            "Model checkpoints not found in %s (need efficientnet.onnx and model.pth). "
+            "Starting API without loaded models; detection endpoints will fail until checkpoints are added.",
+            checkpoint_dir,
+        )
+        return
+
     logger.info("Loading EfficientNet ONNX Model...")
-    onnx_model = onnx.load("models/checkpoints/efficientnet.onnx")
+    onnx_model = onnx.load(onnx_path)
     pytorch_model = ConvertModel(onnx_model)
-    
+
     logger.info("Loading checkoints from model.pth...")
-    ckpt = torch.load("models/checkpoints/model.pth", map_location=torch.device('cpu'))
-    
+    ckpt = torch.load(ckpt_path, map_location=torch.device('cpu'))
+
     # Load Image Model
     rgb_encoder = pytorch_model
     rgb_encoder.load_state_dict(ckpt['rgb_encoder'], strict=True)
