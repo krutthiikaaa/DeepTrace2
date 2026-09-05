@@ -3,6 +3,7 @@ import logging
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from backend.services.image_detector import detect_image
 from backend.services.forensics import perform_ela
+from backend.services.noise_analysis import perform_noise_analysis
 from backend.utils.file_handlers import save_upload_file_tmp, cleanup_file
 import time
 
@@ -25,8 +26,13 @@ async def process_image(file: UploadFile = File(...)):
         
         logger.info(f"Starting ELA forensics for {file.filename}...")
         ela_result = perform_ela(tmp_path)
+        
+        logger.info(f"Starting Noise forensics for {file.filename}...")
+        noise_result = perform_noise_analysis(tmp_path)
+
         result["forensics"] = {
-            "ela": ela_result
+            "ela": ela_result,
+            "noise": noise_result
         }
         
         duration = round(time.time() - start_time, 2)

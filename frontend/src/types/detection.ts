@@ -15,10 +15,21 @@ export interface ELAForensics {
   error?: string;
 }
 
+export interface NoiseForensics {
+  available: boolean;
+  mean?: number;
+  max?: number;
+  std?: number;
+  anomaly_ratio?: number;
+  image?: string;
+  error?: string;
+}
+
 export interface ImageDetectionResult extends BaseDetectionResult {
   media_type: "image";
   forensics?: {
     ela?: ELAForensics;
+    noise?: NoiseForensics;
   };
 }
 
