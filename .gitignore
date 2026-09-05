@@ -8,3 +8,6 @@ results/*
 !results/.gitkeep
 models/checkpoints/*
 !models/checkpoints/.gitkeep
+!models/checkpoints/efficientnet.onnx
+!models/checkpoints/model.pth
+!models/checkpoints/NOTICE.md
