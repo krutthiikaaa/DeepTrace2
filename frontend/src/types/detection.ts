@@ -36,12 +36,31 @@ export interface FFTForensics {
   error?: string;
 }
 
+export interface EyeAnalysis {
+  available: boolean;
+  eye_center_alignment_difference?: number;
+  eye_size_difference?: number;
+  brightness_difference?: number;
+}
+
+export interface FaceEyeForensics {
+  available: boolean;
+  face_detected?: boolean;
+  face_count?: number;
+  primary_face_selected?: boolean;
+  both_eyes_detected?: boolean;
+  eye_analysis?: EyeAnalysis;
+  image?: string;
+  error?: string;
+}
+
 export interface ImageDetectionResult extends BaseDetectionResult {
   media_type: "image";
   forensics?: {
     ela?: ELAForensics;
     noise?: NoiseForensics;
     fft?: FFTForensics;
+    face_eye?: FaceEyeForensics;
   };
 }
 

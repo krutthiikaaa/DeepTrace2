@@ -5,6 +5,7 @@ from backend.services.image_detector import detect_image
 from backend.services.forensics import perform_ela
 from backend.services.noise_analysis import perform_noise_analysis
 from backend.services.fft_analysis import perform_fft_analysis
+from backend.services.face_eye_analysis import perform_face_eye_analysis
 from backend.utils.file_handlers import save_upload_file_tmp, cleanup_file
 import time
 
@@ -34,10 +35,14 @@ async def process_image(file: UploadFile = File(...)):
         logger.info(f"Starting FFT forensics for {file.filename}...")
         fft_result = perform_fft_analysis(tmp_path)
 
+        logger.info(f"Starting Face/Eye forensics for {file.filename}...")
+        face_eye_result = perform_face_eye_analysis(tmp_path)
+
         result["forensics"] = {
             "ela": ela_result,
             "noise": noise_result,
-            "fft": fft_result
+            "fft": fft_result,
+            "face_eye": face_eye_result
         }
         
         duration = round(time.time() - start_time, 2)
