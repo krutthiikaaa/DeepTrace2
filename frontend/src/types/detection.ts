@@ -25,11 +25,23 @@ export interface NoiseForensics {
   error?: string;
 }
 
+export interface FFTForensics {
+  available: boolean;
+  spectral_mean?: number;
+  spectral_std?: number;
+  high_frequency_ratio?: number;
+  low_frequency_ratio?: number;
+  spectral_energy?: number;
+  image?: string;
+  error?: string;
+}
+
 export interface ImageDetectionResult extends BaseDetectionResult {
   media_type: "image";
   forensics?: {
     ela?: ELAForensics;
     noise?: NoiseForensics;
+    fft?: FFTForensics;
   };
 }
 
