@@ -2,9 +2,11 @@ fastapi
 uvicorn
 python-multipart
 torch
-opencv-python
+torchvision
+opencv-python<5
 onnx
 onnx2pytorch
 numpy
 timm
 scipy
+wget
