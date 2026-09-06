@@ -84,7 +84,11 @@ h1 {
   max-width: 600px;
   border-radius: var(--radius);
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  overflow: hidden;
+  transition: max-width 0.2s;
+}
+
+.detection-panel--wide {
+  max-width: 1100px;
 }
 
 /* Tabs */
@@ -92,6 +96,9 @@ h1 {
   display: flex;
   border-bottom: 1px solid var(--border);
   background: #f8fafc;
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+  overflow: hidden;
 }
 
 .tab-btn {
@@ -257,6 +264,68 @@ h1 {
 .icon-button:hover {
   background: #f1f5f9;
   color: var(--fake-color);
+}
+
+/* Webcam */
+.source-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.source-toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: none;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.source-toggle-btn + .source-toggle-btn {
+  border-left: 1px solid var(--border);
+}
+
+.source-toggle-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.webcam-video-wrapper {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+  margin-bottom: 1rem;
+}
+
+.webcam-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.webcam-capture-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.webcam-error-icon {
+  color: var(--fake-color);
+  margin-bottom: 1rem;
 }
 
 /* Loading */
@@ -579,12 +648,44 @@ h1 {
 
 /* Image Report Styles (Phase 11) */
 .kyc-report {
+  display: flex;
+  align-items: stretch;
+  gap: 2rem;
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
+}
+
+.kyc-photo-col {
+  flex: 0 0 300px;
+}
+
+.kyc-photo-sticky {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.kyc-photo {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.kyc-photo-caption {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.kyc-info-col {
+  flex: 1;
+  min-width: 0;
 }
 
 .report-header {
@@ -791,5 +892,18 @@ h1 {
 @media (max-width: 768px) {
   .report-grid {
     grid-template-columns: 1fr;
+  }
+
+  .kyc-report {
+    flex-direction: column;
+  }
+
+  .kyc-photo-col {
+    flex: none;
+    width: 100%;
+  }
+
+  .kyc-photo-sticky {
+    position: static;
   }
 }

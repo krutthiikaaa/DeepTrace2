@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { X, Loader2, FileAudio, FileVideo, FileImage } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Loader2, FileAudio, FileVideo, FileImage, Camera } from 'lucide-react';
 import type { DetectionResult } from '../types/detection';
 import { detectImage, detectVideo, detectAudio } from '../services/api';
+import WebcamCapture from './WebcamCapture';
 
 interface Props {
   mode: 'image' | 'video' | 'audio';
-  onResult: (result: DetectionResult) => void;
+  onResult: (result: DetectionResult, sourceFile: File) => void;
   onError: (msg: string) => void;
 }
 
@@ -14,7 +15,18 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MediaUploader: React.FC<Props> = ({ mode, onResult, onError }) => {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [source, setSource] = useState<'upload' | 'webcam'>('upload');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Leaving the Image tab always resets back to the default upload view,
+  // so returning to Image later doesn't silently relaunch the camera.
+  useEffect(() => {
+    if (mode !== 'image') setSource('upload');
+  }, [mode]);
+
+  const handleWebcamCapture = (capturedFile: File) => {
+    setFile(capturedFile);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -53,7 +65,7 @@ const MediaUploader: React.FC<Props> = ({ mode, onResult, onError }) => {
       else if (mode === 'video') result = await detectVideo(file);
       else if (mode === 'audio') result = await detectAudio(file);
 
-      if (result) onResult(result);
+      if (result) onResult(result, file);
     } catch (err) {
       onError(err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
@@ -90,19 +102,44 @@ const MediaUploader: React.FC<Props> = ({ mode, onResult, onError }) => {
 
   return (
     <div className="upload-container">
+      {mode === 'image' && !file && (
+        <div className="source-toggle">
+          <button
+            type="button"
+            className={`source-toggle-btn ${source === 'upload' ? 'active' : ''}`}
+            onClick={() => setSource('upload')}
+          >
+            <FileImage size={16} />
+            Upload Photo
+          </button>
+          <button
+            type="button"
+            className={`source-toggle-btn ${source === 'webcam' ? 'active' : ''}`}
+            onClick={() => setSource('webcam')}
+          >
+            <Camera size={16} />
+            Use Webcam
+          </button>
+        </div>
+      )}
+
       {!file ? (
-        <label className="upload-dropzone">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept={getAcceptType()}
-            className="hidden-input"
-          />
-          {getIcon()}
-          <h3>Select a {mode} to analyze</h3>
-          <p className="subtitle">Max file size: 50MB</p>
-        </label>
+        mode === 'image' && source === 'webcam' ? (
+          <WebcamCapture onCapture={handleWebcamCapture} onCancel={() => setSource('upload')} />
+        ) : (
+          <label className="upload-dropzone">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept={getAcceptType()}
+              className="hidden-input"
+            />
+            {getIcon()}
+            <h3>Select a {mode} to analyze</h3>
+            <p className="subtitle">Max file size: 50MB</p>
+          </label>
+        )
       ) : (
         <div className="selected-file-card">
           {mode === 'image' && file ? (

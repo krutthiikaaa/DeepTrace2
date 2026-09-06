@@ -6,13 +6,14 @@ import type { ImageDetectionResult } from '../types/detection';
 
 interface Props {
   result: DetectionResult | null;
+  previewUrl?: string | null;
 }
 
-const ResultDisplay: React.FC<Props> = ({ result }) => {
+const ResultDisplay: React.FC<Props> = ({ result, previewUrl }) => {
   if (!result) return null;
 
   if (result.media_type === 'image') {
-    return <ImageReport result={result as ImageDetectionResult} />;
+    return <ImageReport result={result as ImageDetectionResult} previewUrl={previewUrl} />;
   }
 
   const isReal = result.prediction === 'REAL';
