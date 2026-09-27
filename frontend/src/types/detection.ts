@@ -87,9 +87,14 @@ export interface RiskAssessment {
   explanation: string;
 }
 
+export interface CaptureIndicator {
+  status: string;
+  note?: string;
+}
+
 export interface CaptureIntegrity {
   status: "DIRECT_CAPTURE" | "POSSIBLE_RECAPTURE" | "UNCERTAIN" | "UNAVAILABLE";
-  indicators: string[];
+  indicators: Record<string, CaptureIndicator>;
   explanation: string;
 }
 

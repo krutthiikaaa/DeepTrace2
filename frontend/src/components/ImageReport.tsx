@@ -21,12 +21,10 @@ const ImageReport: React.FC<Props> = ({ result }) => {
     );
   }
 
-  // Formatting risk level string
   const getRiskTitle = (level: string) => {
     return level.replace(/_/g, ' ');
   };
 
-  // Determining Risk UI
   const isHigh = risk.risk_level === 'HIGH_RISK';
   const isLow = risk.risk_level === 'LOW_RISK';
 
@@ -48,7 +46,6 @@ const ImageReport: React.FC<Props> = ({ result }) => {
 
   return (
     <div className="kyc-report">
-      {/* 2. Overall Risk Decision */}
       <div className={`risk-decision-card ${risk.risk_level.toLowerCase()}`}>
         <div className="risk-title">
           {riskIcon}
@@ -59,7 +56,6 @@ const ImageReport: React.FC<Props> = ({ result }) => {
 
       <div className="dashboard-grid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Capture Integrity Section */}
           {result.capture_integrity && result.capture_integrity.status !== 'UNAVAILABLE' && (
             <div className="dashboard-card">
               <div className="card-heading">
@@ -71,34 +67,34 @@ const ImageReport: React.FC<Props> = ({ result }) => {
                   {getRiskTitle(result.capture_integrity.status)}
                 </div>
                 
-                {result.capture_integrity.indicators && result.capture_integrity.indicators.length > 0 ? (
+                {result.capture_integrity.indicators && Object.keys(result.capture_integrity.indicators).length > 0 ? (
                   <div style={{ marginTop: '1rem' }}>
-                    <span className="stat-label" style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>Indicators:</span>
-                    <ul className="capture-indicators">
-                      {result.capture_integrity.indicators.map((ind, idx) => (
-                        <li key={idx}>✓ {ind}</li>
+                    <span className="stat-label" style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>Diagnostic Indicators:</span>
+                    <ul className="capture-indicators" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {Object.entries(result.capture_integrity.indicators).map(([key, indicator]) => (
+                        <li key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: '#f8fafc', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                          <span style={{ fontWeight: '600', textTransform: 'uppercase', fontSize: '0.8rem', color: 'var(--text-main)' }}>{key.replace(/_/g, ' ')}: <span style={{ color: indicator.status === 'POSSIBLE_ANOMALY' ? 'var(--fake-color)' : 'var(--text-muted)' }}>{indicator.status.replace(/_/g, ' ')}</span></span>
+                          {indicator.note && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{indicator.note}</span>}
+                        </li>
                       ))}
                     </ul>
                   </div>
                 ) : (
                   <div style={{ marginTop: '1rem' }}>
-                    <span className="stat-label" style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>Indicators:</span>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>No clear display/re-presentation indicators detected.</p>
+                    <span className="stat-label" style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>Diagnostic Indicators:</span>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>No indicators available.</p>
                   </div>
                 )}
 
                 <div style={{ marginTop: '1rem' }}>
                   <p className="capture-explanation">
-                    {result.capture_integrity.status === 'POSSIBLE_RECAPTURE' 
-                      ? "The camera captured evidence consistent with a previously displayed or reproduced image. This does not prove that the underlying content is manipulated, but direct authenticity assessment may be unreliable."
-                      : result.capture_integrity.explanation}
+                    {result.capture_integrity.explanation}
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 3. AI Detection */}
           <div className="dashboard-card">
             <div className="card-heading">
               <Search size={18} />
@@ -122,7 +118,6 @@ const ImageReport: React.FC<Props> = ({ result }) => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* 4. Why This Decision? */}
           <div className="dashboard-card">
             <div className="card-heading">
               <FileSearch size={18} />
@@ -130,7 +125,6 @@ const ImageReport: React.FC<Props> = ({ result }) => {
             </div>
             <p style={{ fontSize: '1rem', lineHeight: 1.6 }}>{risk.explanation || "Additional explanation is unavailable. Review the available evidence below."}</p>
             
-            {/* 7. Evidence Items List (Compact) */}
             {risk.evidence_items && risk.evidence_items.length > 0 && (
               <ul className="evidence-list" style={{ marginTop: '1rem' }}>
                 {risk.evidence_items.filter(item => item.source !== 'AI_DETECTOR').map((item, idx) => {
@@ -150,7 +144,6 @@ const ImageReport: React.FC<Props> = ({ result }) => {
             )}
           </div>
           
-          {/* 8. Reviewer Recommendation */}
           <div className="reviewer-recommendation">
             <h4>REVIEWER RECOMMENDATION</h4>
             <p>{rec}</p>
@@ -158,12 +151,10 @@ const ImageReport: React.FC<Props> = ({ result }) => {
         </div>
       </div>
 
-      {/* 6. Forensic Evidence (Phase 10 visualization) */}
       <div className="forensic-wrapper" style={{ marginTop: '1rem' }}>
         <ForensicEvidence result={result} />
       </div>
 
-      {/* 9. Disclaimer */}
       <div className="kyc-disclaimer">
         <p>This analysis assesses the authenticity characteristics of the uploaded media. It does not independently verify the person's identity or guarantee that the document/selfie belongs to the claimed individual.</p>
       </div>
