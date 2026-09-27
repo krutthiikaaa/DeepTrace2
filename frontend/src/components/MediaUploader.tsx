@@ -64,7 +64,7 @@ const MediaUploader: React.FC<Props> = ({ mode, onResult, onError }) => {
   const getAcceptType = () => {
     if (mode === 'image') return 'image/jpeg, image/png';
     if (mode === 'video') return 'video/*';
-    if (mode === 'audio') return 'audio/wav'; // backend explicitly asks for WAV
+    if (mode === 'audio') return 'audio/wav'; 
     return '*/*';
   };
 
@@ -76,13 +76,13 @@ const MediaUploader: React.FC<Props> = ({ mode, onResult, onError }) => {
 
   if (isAnalyzing) {
     return (
-      <div className="upload-container analyzing">
+      <div className="analyzing">
         <Loader2 className="spinner" size={48} />
         <h3 className="pulse-text">
-          {mode === 'image' ? 'ANALYZING KYC IMAGE' : `Analyzing ${mode}...`}
+          {mode === 'image' ? 'ANALYZING KYC MEDIA' : `ANALYZING ${mode.toUpperCase()} MEDIA`}
         </h3>
         <p className="subtitle">
-          {mode === 'image' ? 'Running AI detection and forensic analysis...' : `Please wait while the AI processes the ${mode}.`}
+          Running AI detection and forensic analysis...
         </p>
       </div>
     );
@@ -100,33 +100,45 @@ const MediaUploader: React.FC<Props> = ({ mode, onResult, onError }) => {
             className="hidden-input"
           />
           {getIcon()}
-          <h3>Select a {mode} to analyze</h3>
-          <p className="subtitle">Max file size: 50MB</p>
+          <h3>UPLOAD KYC {mode.toUpperCase()}</h3>
+          <p className="subtitle">Drop {mode === 'image' ? 'an image' : `a ${mode}`} here or browse from your device</p>
+          <p className="subtitle" style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Supported: {mode === 'image' ? 'JPEG / PNG' : mode === 'audio' ? 'WAV' : 'Video'}<br/>Maximum 50 MB</p>
         </label>
       ) : (
-        <div className="selected-file-card">
-          {mode === 'image' && file ? (
-            <div className="image-preview-container" style={{ textAlign: 'center', marginBottom: '1rem' }}>
-              <img
-                src={URL.createObjectURL(file)}
-                alt="Selected KYC"
-                style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', objectFit: 'contain' }}
-              />
-            </div>
-          ) : null}
-          <div className="file-info">
-            {mode !== 'image' && getIcon()}
-            <div className="file-details">
-              <h4>{file.name}</h4>
-              <p>{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
-            </div>
-            <button onClick={clearFile} className="icon-button" title="Remove file">
-              <X size={20} />
-            </button>
+        <div className="two-column-layout">
+          <div className="left-col">
+            <h4 className="section-title">Media Preview</h4>
+            {mode === 'image' && file ? (
+              <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt="Selected KYC"
+                  style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '400px', objectFit: 'contain', background: '#f8fafc' }}
+                />
+              </div>
+            ) : (
+              <div style={{ border: '1px solid var(--border)', borderRadius: '8px', background: '#f8fafc', padding: '4rem', display: 'flex', justifyContent: 'center' }}>
+                {getIcon()}
+              </div>
+            )}
           </div>
-          <button className="primary-button" onClick={startAnalysis}>
-            Analyze Image
-          </button>
+          <div className="right-col">
+            <div className="selected-file-card">
+              <h4 className="section-title">File Information</h4>
+              <div className="file-info">
+                <div className="file-details">
+                  <h4>{file.name}</h4>
+                  <p>{file.type || 'Unknown type'} • {(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                </div>
+                <button onClick={clearFile} className="icon-button" title="Remove file">
+                  <X size={20} />
+                </button>
+              </div>
+              <button className="primary-button" onClick={startAnalysis}>
+                Analyze {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

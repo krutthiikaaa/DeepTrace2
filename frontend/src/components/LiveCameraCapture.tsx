@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, RefreshCw, Check, AlertCircle } from 'lucide-react';
+import { Camera, RefreshCw, Check, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { detectImage } from '../services/api';
 import type { DetectionResult } from '../types/detection';
 
@@ -127,63 +127,75 @@ const LiveCameraCapture: React.FC<Props> = ({ onResult, onError }) => {
   };
 
   return (
-    <div className="live-camera-container" style={{ padding: '2rem 0' }}>
-      <div className="text-center" style={{ marginBottom: '2rem' }}>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: '#e2e8f0', letterSpacing: '0.05em' }}>LIVE KYC VERIFICATION</h3>
-        <p className="subtitle" style={{ color: '#94a3b8', marginTop: '0.5rem' }}>Position the document/face clearly inside the camera frame.</p>
-      </div>
-
-      {errorMsg ? (
-        <div className="error-banner" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', maxWidth: '640px', margin: '0 auto' }}>
+    <div className="live-camera-container">
+      {errorMsg && (
+        <div className="error-banner">
           <AlertCircle size={20} />
           <span>{errorMsg}</span>
         </div>
-      ) : (
-        <div className="camera-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          
-          {!capturedImage ? (
-            <>
-              <div className="video-frame" style={{ border: '2px solid #334155', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.5rem', background: '#0f172a', width: '100%', maxWidth: '640px', aspectRatio: '4/3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <video 
-                  ref={videoRef} 
-                  autoPlay 
-                  playsInline 
-                  muted 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: stream ? 'block' : 'none' }}
-                />
-                {!stream && <span style={{ color: '#64748b' }}>Loading camera...</span>}
-              </div>
-              <button className="primary-button" onClick={handleCapture} disabled={!stream || isCapturing} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Camera size={18} /> 
-                {isCapturing ? "Capturing sequence..." : "Capture Image"}
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="video-frame" style={{ border: '2px solid #334155', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.5rem', background: '#0f172a', width: '100%', maxWidth: '640px' }}>
-                <img 
-                  src={capturedImage} 
-                  alt="Captured frame" 
-                  style={{ width: '100%', height: 'auto', display: 'block' }}
-                />
-              </div>
-              
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="secondary-button" onClick={handleRetake} disabled={isAnalyzing} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <RefreshCw size={18} />
-                  Retake
-                </button>
-                <button className="primary-button" onClick={handleAnalyze} disabled={isAnalyzing} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Check size={18} />
-                  {isAnalyzing ? "Analyzing..." : "Analyze"}
-                </button>
-              </div>
-            </>
-          )}
-          
-          <canvas ref={canvasRef} style={{ display: 'none' }} />
-        </div>
       )}
+      
+      <div className="two-column-layout">
+        <div className="left-col">
+          <h4 className="section-title">Live Capture</h4>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {!capturedImage ? (
+              <>
+                <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: '#0f172a', width: '100%', aspectRatio: '4/3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: stream ? 'block' : 'none' }}
+                  />
+                  {!stream && <span style={{ color: '#64748b' }}>Loading camera...</span>}
+                </div>
+                <button className="primary-button" onClick={handleCapture} disabled={!stream || isCapturing}>
+                  <Camera size={18} /> 
+                  {isCapturing ? "Capturing sequence..." : "Capture Image"}
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', width: '100%', aspectRatio: '4/3' }}>
+                  <img 
+                    src={capturedImage} 
+                    alt="Captured frame" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button className="secondary-button" onClick={handleRetake} disabled={isAnalyzing}>
+                    <RefreshCw size={18} />
+                    Retake
+                  </button>
+                  <button className="primary-button" onClick={handleAnalyze} disabled={isAnalyzing}>
+                    <Check size={18} />
+                    {isAnalyzing ? "Analyzing..." : "Analyze Image"}
+                  </button>
+                </div>
+              </>
+            )}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+          </div>
+        </div>
+
+        <div className="right-col">
+          <div className="guidance-card">
+            <h4>KYC Capture Guidance</h4>
+            <ul className="guidance-list">
+              <li><CheckCircle2 size={18} /> Keep the document fully visible inside the frame</li>
+              <li><CheckCircle2 size={18} /> Use even, natural lighting where possible</li>
+              <li><CheckCircle2 size={18} /> Avoid harsh glare or reflections</li>
+              <li><CheckCircle2 size={18} /> Capture directly from the physical document</li>
+              <li><CheckCircle2 size={18} /> Do not photograph another digital screen</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

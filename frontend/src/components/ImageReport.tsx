@@ -48,12 +48,6 @@ const ImageReport: React.FC<Props> = ({ result }) => {
 
   return (
     <div className="kyc-report">
-      {/* 1. KYC Analysis Header */}
-      <div className="report-header text-center">
-        <h2>KYC AUTHENTICITY ANALYSIS</h2>
-        <p className="subtitle">Explainable analysis of the uploaded KYC image using AI detection and supporting forensic signals.</p>
-      </div>
-
       {/* 2. Overall Risk Decision */}
       <div className={`risk-decision-card ${risk.risk_level.toLowerCase()}`}>
         <div className="risk-title">
@@ -63,125 +57,110 @@ const ImageReport: React.FC<Props> = ({ result }) => {
         <p className="risk-desc">{riskExpl}</p>
       </div>
 
-      <div className="report-grid">
-        {/* 3. AI Detection */}
-        <div className="report-card">
-          <div className="card-heading">
-            <Search size={18} />
-            <h4>AI DETECTION</h4>
-          </div>
-          <div className="card-content ai-stats">
-            <div className="stat-box">
-              <span className="stat-label">Prediction</span>
-              <span className={`stat-value ${result.prediction === 'REAL' ? 'real-text' : 'fake-text'}`}>
-                {result.prediction}
-              </span>
-            </div>
-            <div className="stat-box">
-              <span className="stat-label">Confidence</span>
-              <span className="stat-value">
-                {result.confidence !== undefined ? `${(result.confidence * 100).toFixed(0)}%` : 'Unavailable'}
-              </span>
-            </div>
-          </div>
-          <p className="card-footnote">This is the output of the AI image detector and is evaluated separately from the forensic evidence.</p>
-        </div>
+      <div className="dashboard-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Capture Integrity Section */}
+          {result.capture_integrity && result.capture_integrity.status !== 'UNAVAILABLE' && (
+            <div className="dashboard-card">
+              <div className="card-heading">
+                <Info size={18} />
+                <h4>CAPTURE INTEGRITY</h4>
+              </div>
+              <div className="card-content">
+                <div className="capture-integrity-status">
+                  {getRiskTitle(result.capture_integrity.status)}
+                </div>
+                
+                {result.capture_integrity.indicators && result.capture_integrity.indicators.length > 0 ? (
+                  <div style={{ marginTop: '1rem' }}>
+                    <span className="stat-label" style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>Indicators:</span>
+                    <ul className="capture-indicators">
+                      {result.capture_integrity.indicators.map((ind, idx) => (
+                        <li key={idx}>✓ {ind}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '1rem' }}>
+                    <span className="stat-label" style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>Indicators:</span>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>No clear display/re-presentation indicators detected.</p>
+                  </div>
+                )}
 
-        {/* 5. Evidence Summary */}
-        <div className="report-card">
-          <div className="card-heading">
-            <FileSearch size={18} />
-            <h4>EVIDENCE SUMMARY</h4>
-          </div>
-          <div className="card-content summary-stats">
-            <div className="summary-row">
-              <span>Supporting forensic signals</span>
-              <strong>{risk.evidence_summary?.supporting_signals ?? 0}</strong>
+                <div style={{ marginTop: '1rem' }}>
+                  <p className="capture-explanation">
+                    {result.capture_integrity.status === 'POSSIBLE_RECAPTURE' 
+                      ? "The camera captured evidence consistent with a previously displayed or reproduced image. This does not prove that the underlying content is manipulated, but direct authenticity assessment may be unreliable."
+                      : result.capture_integrity.explanation}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="summary-row">
-              <span>Conflicting forensic signals</span>
-              <strong>{risk.evidence_summary?.conflicting_signals ?? 0}</strong>
-            </div>
-            <div className="summary-row">
-              <span>Unavailable checks</span>
-              <strong>{risk.evidence_summary?.unavailable_signals ?? 0}</strong>
-            </div>
-          </div>
-        </div>
-        {/* Capture Integrity Section */}
-        {result.capture_integrity && result.capture_integrity.status !== 'UNAVAILABLE' && (
-          <div className="report-card full-width">
+          )}
+
+          {/* 3. AI Detection */}
+          <div className="dashboard-card">
             <div className="card-heading">
-              <Info size={18} />
-              <h4>CAPTURE INTEGRITY</h4>
+              <Search size={18} />
+              <h4>AI DETECTION</h4>
             </div>
-            <div className="card-content">
-              <div className="detail-row">
-                <span className="label" style={{ fontWeight: 'bold' }}>Status:</span>
-                <span className="value" style={{ fontWeight: 'bold' }}>{getRiskTitle(result.capture_integrity.status)}</span>
+            <div className="card-content ai-stats">
+              <div className="stat-box border-bottom">
+                <span className="stat-label">Prediction</span>
+                <span className={`stat-value ${result.prediction === 'REAL' ? 'real-text' : 'fake-text'}`}>
+                  {result.prediction}
+                </span>
               </div>
-              
-              {result.capture_integrity.indicators && result.capture_integrity.indicators.length > 0 ? (
-                <div style={{ marginTop: '1rem' }}>
-                  <span className="label" style={{ fontWeight: 'bold' }}>Indicators:</span>
-                  <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
-                    {result.capture_integrity.indicators.map((ind, idx) => (
-                      <li key={idx}>✓ {ind}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <div style={{ marginTop: '1rem' }}>
-                  <span className="label" style={{ fontWeight: 'bold' }}>Indicators:</span>
-                  <p style={{ margin: '0.5rem 0 0 0' }}>No clear display/re-presentation indicators detected.</p>
-                </div>
-              )}
-
-              <div style={{ marginTop: '1rem' }}>
-                <span className="label" style={{ fontWeight: 'bold' }}>Explanation:</span>
-                <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>
-                  {result.capture_integrity.status === 'POSSIBLE_RECAPTURE' 
-                    ? "The camera captured evidence consistent with a previously displayed or reproduced image. This does not prove that the underlying content is manipulated, but direct authenticity assessment may be unreliable."
-                    : result.capture_integrity.explanation}
-                </p>
+              <div className="stat-box">
+                <span className="stat-label">Confidence</span>
+                <span className="stat-value">
+                  {result.confidence !== undefined ? `${(result.confidence * 100).toFixed(0)}%` : 'Unavailable'}
+                </span>
               </div>
             </div>
-            <p className="card-footnote">Content authenticity and capture integrity are separate assessments.</p>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* 4. Why This Decision? */}
-      <div className="decision-explanation">
-        <h4>WHY THIS DECISION?</h4>
-        <p>{risk.explanation || "Additional explanation is unavailable. Review the available evidence below."}</p>
-        
-        {/* 7. Evidence Items List (Compact) */}
-        {risk.evidence_items && risk.evidence_items.length > 0 && (
-          <ul className="evidence-list">
-            {risk.evidence_items.filter(item => item.source !== 'AI_DETECTOR').map((item, idx) => {
-              const icon = item.status === 'UNAVAILABLE' ? '—' : '✓';
-              const cleanStatus = item.status.replace(/_/g, ' ').toLowerCase();
-              return (
-                <li key={idx}>
-                  <span className="item-icon">{icon}</span>
-                  <strong>{item.source.replace(/_/g, ' ')}</strong> — <span className="item-status">{cleanStatus.charAt(0).toUpperCase() + cleanStatus.slice(1)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* 4. Why This Decision? */}
+          <div className="dashboard-card">
+            <div className="card-heading">
+              <FileSearch size={18} />
+              <h4>WHY THIS DECISION?</h4>
+            </div>
+            <p style={{ fontSize: '1rem', lineHeight: 1.6 }}>{risk.explanation || "Additional explanation is unavailable. Review the available evidence below."}</p>
+            
+            {/* 7. Evidence Items List (Compact) */}
+            {risk.evidence_items && risk.evidence_items.length > 0 && (
+              <ul className="evidence-list" style={{ marginTop: '1rem' }}>
+                {risk.evidence_items.filter(item => item.source !== 'AI_DETECTOR').map((item, idx) => {
+                  const icon = item.status === 'UNAVAILABLE' ? '—' : '✓';
+                  const cleanStatus = item.status.replace(/_/g, ' ').toLowerCase();
+                  return (
+                    <li key={idx}>
+                      <span className="item-icon">{icon}</span>
+                      <div className="evidence-content">
+                        <span className="item-status">{item.source.replace(/_/g, ' ')} — {cleanStatus}</span>
+                        <span className="item-msg">{item.message}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          
+          {/* 8. Reviewer Recommendation */}
+          <div className="reviewer-recommendation">
+            <h4>REVIEWER RECOMMENDATION</h4>
+            <p>{rec}</p>
+          </div>
+        </div>
       </div>
 
       {/* 6. Forensic Evidence (Phase 10 visualization) */}
-      <div className="forensic-wrapper">
+      <div className="forensic-wrapper" style={{ marginTop: '1rem' }}>
         <ForensicEvidence result={result} />
-      </div>
-
-      {/* 8. Reviewer Recommendation */}
-      <div className="reviewer-recommendation">
-        <h4>REVIEWER RECOMMENDATION</h4>
-        <p>{rec}</p>
       </div>
 
       {/* 9. Disclaimer */}
