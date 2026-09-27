@@ -84,9 +84,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="DeepTrace2 Media Detection API", lifespan=lifespan)
 
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url and frontend_url not in allowed_origins:
+    allowed_origins.append(frontend_url.strip())
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

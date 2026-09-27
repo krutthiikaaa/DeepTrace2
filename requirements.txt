@@ -3,7 +3,7 @@ uvicorn
 python-multipart
 torch
 torchvision
-opencv-python<5
+opencv-python-headless<5
 onnx
 onnx2pytorch
 numpy
