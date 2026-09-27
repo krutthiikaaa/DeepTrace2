@@ -4,7 +4,7 @@
 
 DeepTrace is an explainable KYC (Know Your Customer) media verification system that combines AI-based media detection, digital forensic analysis, capture-integrity analysis, and conservative evidence fusion to support human KYC review.
 
-## ⚠️ The Problem
+##The Problem
 In modern KYC and identity verification, simply classifying an uploaded image as "REAL" or "FAKE" using an AI model is insufficient. Attackers frequently bypass simple verifications through:
 - **AI-generated media** (Deepfakes, Stable Diffusion).
 - **Manipulated images** (Face swaps, digital alterations).
@@ -13,7 +13,7 @@ In modern KYC and identity verification, simply classifying an uploaded image as
 
 When an AI model analyzes a photograph of a phone screen, it may genuinely detect the real camera sensor noise and classify the image as "REAL", bypassing traditional AI deepfake detectors. DeepTrace solves this by treating *content authenticity* and *capture integrity* as separate but equally critical components.
 
-## 💡 The Solution
+##The Solution
 DeepTrace utilizes a multi-layered, explainable architecture rather than relying on a single "black box" model.
 
 ```
@@ -30,7 +30,7 @@ Evidence Fusion (Rule-based corroboration)
 Explainable KYC Risk Report (LOW_RISK, REVIEW_REQUIRED, HIGH_RISK)
 ```
 
-## ✨ Key Features
+##Key Features
 - **AI-Based Media Detection**: Evaluates Image, Video, and Audio media for synthetic generation traces using PyTorch/ONNX models.
 - **Error Level Analysis (ELA)**: Detects inconsistent compression levels indicating possible splicing.
 - **Noise/Residual Analysis**: Extracts high-frequency camera noise to find inconsistencies.
@@ -68,58 +68,13 @@ It evaluates:
 - `REVIEW_REQUIRED`: Insufficient evidence, mixed signals, or possible capture recapture.
 - `HIGH_RISK`: Strong AI "FAKE" prediction + supporting forensic anomalies.
 
-## 📊 Explainability
+##Explainability
 Every API response generates a dynamic, human-readable report explaining:
 - The primary AI result and confidence.
 - Which forensic findings were anomalous vs. clean.
 - Any capture integrity concerns.
 - A summary of supporting/conflicting/unavailable evidence.
 - The final reviewer recommendation.
-
-## 🏗️ Architecture
-
-```
-  React + TypeScript + Vite (Frontend)
-                  ↓
-          FastAPI (Backend)
-                  ↓
-        ┌─────────┼─────────┐
-        ↓         ↓         ↓
-    AI Model  Forensics  Capture
-   (PyTorch) (OpenCV)   Integrity
-        └─────────┼─────────┘
-                  ↓
-           Evidence Fusion
-                  ↓
-           KYC Risk Report
-```
-
-## 🛠️ Technology Stack
-
-| Component | Technologies |
-| :--- | :--- |
-| **Frontend** | React, TypeScript, Vite |
-| **Backend** | Python 3.9, FastAPI, Uvicorn |
-| **AI/ML** | PyTorch, ONNX, ONNX2PyTorch, timm |
-| **Computer Vision** | OpenCV (`opencv-python-headless`), NumPy, SciPy |
-| **Storage** | Git LFS (for model checkpoints) |
-
-## 📁 Project Structure
-```text
-DeepTrace2/
-├── backend/
-│   ├── app.py                     # FastAPI application entrypoint
-│   ├── routes/                    # API route handlers
-│   ├── services/                  # Forensic & AI logic
-│   ├── models_arch/               # PyTorch model definitions
-│   └── tests/                     # Test suite
-├── frontend/
-│   ├── src/                       # React source code
-│   └── package.json
-├── models/
-│   └── checkpoints/               # Git LFS tracked AI models (.pth, .onnx)
-└── requirements.txt               # Python dependencies
-```
 
 ## 🚀 Local Setup
 
