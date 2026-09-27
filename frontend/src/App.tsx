@@ -2,16 +2,17 @@ import { useState } from 'react';
 import BackendStatus from './components/BackendStatus';
 import DetectionTabs from './components/DetectionTabs';
 import MediaUploader from './components/MediaUploader';
+import LiveCameraCapture from './components/LiveCameraCapture';
 import ResultDisplay from './components/ResultDisplay';
 import type { DetectionResult } from './types/detection';
 import { AlertCircle } from 'lucide-react';
 
 function App() {
-  const [mode, setMode] = useState<'image' | 'video' | 'audio'>('image');
+  const [mode, setMode] = useState<'image' | 'video' | 'audio' | 'live-camera'>('image');
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleModeChange = (newMode: 'image' | 'video' | 'audio') => {
+  const handleModeChange = (newMode: 'image' | 'video' | 'audio' | 'live-camera') => {
     setMode(newMode);
     setResult(null);
     setError(null);
@@ -53,11 +54,18 @@ function App() {
             )}
             
             {!result ? (
-              <MediaUploader 
-                mode={mode} 
-                onResult={handleResult} 
-                onError={handleError} 
-              />
+              mode === 'live-camera' ? (
+                <LiveCameraCapture 
+                  onResult={handleResult} 
+                  onError={handleError} 
+                />
+              ) : (
+                <MediaUploader 
+                  mode={mode} 
+                  onResult={handleResult} 
+                  onError={handleError} 
+                />
+              )
             ) : (
               <div className="result-container">
                 <ResultDisplay result={result} />

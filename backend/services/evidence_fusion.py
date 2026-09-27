@@ -53,7 +53,7 @@ def evaluate_face_eye(face_data) -> dict:
         return {"source": "FACE_EYE", "status": "POSSIBLE_INCONSISTENCY", "message": "Possible facial consistency anomaly detected.", "supports_risk": True}
     return {"source": "FACE_EYE", "status": "CONSISTENT", "message": "No clear facial consistency anomalies were identified.", "supports_risk": False}
 
-def perform_evidence_fusion(prediction: str, confidence: float, forensics: dict) -> dict:
+def perform_evidence_fusion(prediction: str, confidence: float, forensics: dict, capture_integrity: dict = None) -> dict:
     """
     Evaluates available forensic evidence and combines it with the AI prediction
     to provide a transparent KYC Risk Assessment.
@@ -137,6 +137,13 @@ def perform_evidence_fusion(prediction: str, confidence: float, forensics: dict)
             risk_level = "LOW_RISK"
         else:
             risk_level = "REVIEW_REQUIRED"
+
+    # Adjust risk level based on Capture Integrity
+    if capture_integrity:
+        ci_status = capture_integrity.get("status")
+        if ci_status == "POSSIBLE_RECAPTURE" or ci_status == "UNCERTAIN":
+            if risk_level == "LOW_RISK":
+                risk_level = "REVIEW_REQUIRED"
 
     review_recommended = (risk_level != "LOW_RISK")
     

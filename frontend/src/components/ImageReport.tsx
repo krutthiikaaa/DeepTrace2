@@ -104,6 +104,38 @@ const ImageReport: React.FC<Props> = ({ result }) => {
             </div>
           </div>
         </div>
+        {/* Capture Integrity Section */}
+        {result.capture_integrity && result.capture_integrity.status !== 'UNAVAILABLE' && (
+          <div className="report-card full-width">
+            <div className="card-heading">
+              <Info size={18} />
+              <h4>CAPTURE INTEGRITY</h4>
+            </div>
+            <div className="card-content">
+              <div className="detail-row">
+                <span className="label" style={{ fontWeight: 'bold' }}>Status:</span>
+                <span className="value" style={{ fontWeight: 'bold' }}>{getRiskTitle(result.capture_integrity.status)}</span>
+              </div>
+              
+              {result.capture_integrity.indicators && result.capture_integrity.indicators.length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <span className="label" style={{ fontWeight: 'bold' }}>Indicators:</span>
+                  <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
+                    {result.capture_integrity.indicators.map((ind, idx) => (
+                      <li key={idx}>• {ind}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div style={{ marginTop: '1rem' }}>
+                <span className="label" style={{ fontWeight: 'bold' }}>Explanation:</span>
+                <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>"{result.capture_integrity.explanation}"</p>
+              </div>
+            </div>
+            <p className="card-footnote">Content authenticity and capture integrity are separate assessments.</p>
+          </div>
+        )}
       </div>
 
       {/* 4. Why This Decision? */}

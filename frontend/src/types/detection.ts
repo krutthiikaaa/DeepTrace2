@@ -87,6 +87,12 @@ export interface RiskAssessment {
   explanation: string;
 }
 
+export interface CaptureIntegrity {
+  status: "DIRECT_CAPTURE" | "POSSIBLE_RECAPTURE" | "UNCERTAIN" | "UNAVAILABLE";
+  indicators: string[];
+  explanation: string;
+}
+
 export interface ImageDetectionResult extends BaseDetectionResult {
   media_type: "image";
   forensics?: {
@@ -95,6 +101,7 @@ export interface ImageDetectionResult extends BaseDetectionResult {
     fft?: FFTForensics;
     face_eye?: FaceEyeForensics;
   };
+  capture_integrity?: CaptureIntegrity;
   risk_assessment?: RiskAssessment;
 }
 
