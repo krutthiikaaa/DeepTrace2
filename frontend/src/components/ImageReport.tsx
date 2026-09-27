@@ -41,6 +41,10 @@ const ImageReport: React.FC<Props> = ({ result }) => {
   let rec = "Manual verification recommended because the available evidence is insufficient or conflicting.";
   if (isHigh) rec = "Do not rely on automated approval alone. Perform manual KYC verification and request additional verification evidence if required.";
   if (isLow) rec = "No significant conflicting forensic evidence was detected by the available checks. Continue with normal KYC verification procedures.";
+  
+  if (result.capture_integrity?.status === 'POSSIBLE_RECAPTURE') {
+    rec = "Manual verification recommended because the capture medium may be re-presented.";
+  }
 
   return (
     <div className="kyc-report">
@@ -117,20 +121,29 @@ const ImageReport: React.FC<Props> = ({ result }) => {
                 <span className="value" style={{ fontWeight: 'bold' }}>{getRiskTitle(result.capture_integrity.status)}</span>
               </div>
               
-              {result.capture_integrity.indicators && result.capture_integrity.indicators.length > 0 && (
+              {result.capture_integrity.indicators && result.capture_integrity.indicators.length > 0 ? (
                 <div style={{ marginTop: '1rem' }}>
                   <span className="label" style={{ fontWeight: 'bold' }}>Indicators:</span>
                   <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
                     {result.capture_integrity.indicators.map((ind, idx) => (
-                      <li key={idx}>• {ind}</li>
+                      <li key={idx}>✓ {ind}</li>
                     ))}
                   </ul>
+                </div>
+              ) : (
+                <div style={{ marginTop: '1rem' }}>
+                  <span className="label" style={{ fontWeight: 'bold' }}>Indicators:</span>
+                  <p style={{ margin: '0.5rem 0 0 0' }}>No clear display/re-presentation indicators detected.</p>
                 </div>
               )}
 
               <div style={{ marginTop: '1rem' }}>
                 <span className="label" style={{ fontWeight: 'bold' }}>Explanation:</span>
-                <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>"{result.capture_integrity.explanation}"</p>
+                <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>
+                  {result.capture_integrity.status === 'POSSIBLE_RECAPTURE' 
+                    ? "The camera captured evidence consistent with a previously displayed or reproduced image. This does not prove that the underlying content is manipulated, but direct authenticity assessment may be unreliable."
+                    : result.capture_integrity.explanation}
+                </p>
               </div>
             </div>
             <p className="card-footnote">Content authenticity and capture integrity are separate assessments.</p>

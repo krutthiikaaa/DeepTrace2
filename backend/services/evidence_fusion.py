@@ -187,20 +187,26 @@ def perform_evidence_fusion(prediction: str, confidence: float, forensics: dict,
             explanation_parts.append("The available evidence is insufficient or mixed. Manual KYC review is recommended.")
             
     else: # REAL
-        if anomaly_sources:
-            explanation_parts.append(f"However, forensic modules ({', '.join(anomaly_sources)}) detected possible anomalies.")
-        elif clean_sources:
-            explanation_parts.append("The available forensic checks show no clear anomalies.")
-            
-        if unavailable_sources == len(forensic_items):
-            explanation_parts.append("All forensic modules are unavailable.")
-            
-        if risk_level == "LOW_RISK":
-            explanation_parts.append("This does not guarantee authenticity; automated analysis should be treated as supporting evidence.")
+        if capture_integrity and capture_integrity.get("status") == "POSSIBLE_RECAPTURE":
+            explanation_parts = ["The captured image appears consistent with a real camera photograph, but capture-integrity analysis found evidence that the content may have been re-presented from another display or source. The underlying content cannot be treated as directly captured KYC media."]
         else:
-            if capture_integrity and capture_integrity.get("status") in ["POSSIBLE_RECAPTURE", "UNCERTAIN"]:
-                explanation_parts.append("Furthermore, capture integrity analysis indicates possible re-presented media or is uncertain.")
-            explanation_parts.append("The available evidence is insufficient or mixed. Manual KYC review is recommended.")
+            if strength == "MODERATE" and not anomaly_sources:
+                explanation_parts = ["The AI detector produced a moderate real-image signal. No clear forensic anomalies were identified, but the available evidence is insufficient for a low-risk decision."]
+            else:
+                if anomaly_sources:
+                    explanation_parts.append(f"However, forensic modules ({', '.join(anomaly_sources)}) detected possible anomalies.")
+                elif clean_sources:
+                    explanation_parts.append("The available forensic checks show no clear anomalies.")
+                    
+                if unavailable_sources == len(forensic_items):
+                    explanation_parts.append("All forensic modules are unavailable.")
+                    
+                if risk_level == "LOW_RISK":
+                    explanation_parts.append("This does not guarantee authenticity; automated analysis should be treated as supporting evidence.")
+                else:
+                    if capture_integrity and capture_integrity.get("status") == "UNCERTAIN":
+                        explanation_parts.append("Furthermore, capture integrity analysis is uncertain.")
+                    explanation_parts.append("The available evidence is insufficient or mixed. Manual KYC review is recommended.")
             
     explanation = " ".join(explanation_parts)
     

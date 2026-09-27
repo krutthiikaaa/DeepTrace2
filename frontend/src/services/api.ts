@@ -29,9 +29,15 @@ const handleApiError = (error: unknown): never => {
   throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred');
 };
 
-export const detectImage = async (file: File): Promise<ImageDetectionResult> => {
+export const detectImage = async (file: File, frames?: File[]): Promise<ImageDetectionResult> => {
   const formData = new FormData();
   formData.append('file', file);
+  
+  if (frames && frames.length > 0) {
+    frames.forEach(frame => {
+      formData.append('frames', frame);
+    });
+  }
   
   try {
     const response = await apiClient.post<ImageDetectionResult>('/detect/image', formData, {

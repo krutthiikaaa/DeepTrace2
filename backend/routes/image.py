@@ -1,6 +1,7 @@
 import logging
 # pyrefly: ignore [missing-import]
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from typing import List, Optional
 from backend.services.image_detector import detect_image
 from backend.services.forensics import perform_ela
 from backend.services.noise_analysis import perform_noise_analysis
@@ -15,15 +16,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/image")
-async def process_image(file: UploadFile = File(...)):
+async def process_image(
+    file: UploadFile = File(...),
+    frames: Optional[List[UploadFile]] = File(None)
+):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
         
     logger.info(f"Received image inference request: {file.filename} ({file.content_type})")
     start_time = time.time()
     tmp_path = None
+    temporal_paths = []
     try:
         tmp_path = save_upload_file_tmp(file)
+        
+        if frames:
+            for f in frames:
+                if f.filename: # Valid file
+                    temporal_paths.append(save_upload_file_tmp(f))
+                    
         logger.info(f"Starting image inference for {file.filename}...")
         result = detect_image(tmp_path)
         result["success"] = True
@@ -48,7 +59,7 @@ async def process_image(file: UploadFile = File(...)):
         }
         
         logger.info(f"Starting capture integrity analysis for {file.filename}...")
-        capture_integrity_result = perform_capture_integrity_analysis(tmp_path)
+        capture_integrity_result = perform_capture_integrity_analysis(tmp_path, temporal_paths=temporal_paths)
         result["capture_integrity"] = capture_integrity_result
         
         logger.info(f"Performing evidence fusion for {file.filename}...")
@@ -73,3 +84,5 @@ async def process_image(file: UploadFile = File(...)):
     finally:
         if tmp_path:
             cleanup_file(tmp_path)
+        for p in temporal_paths:
+            cleanup_file(p)

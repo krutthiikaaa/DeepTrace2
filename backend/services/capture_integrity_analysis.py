@@ -3,10 +3,11 @@ import numpy as np
 import logging
 from PIL import Image
 import os
+from backend.services.temporal_capture_analysis import analyze_temporal_frames
 
 logger = logging.getLogger(__name__)
 
-def perform_capture_integrity_analysis(filepath: str) -> dict:
+def perform_capture_integrity_analysis(filepath: str, temporal_paths: list = None) -> dict:
     """
     Analyzes an image for capture integrity (e.g., moire patterns, resampling artifacts, glare, missing metadata).
     Returns a structured response without making final authenticity claims.
@@ -14,6 +15,7 @@ def perform_capture_integrity_analysis(filepath: str) -> dict:
     indicators = []
     status = "UNCERTAIN"
     explanation = ""
+    temporal_data = {}
 
     try:
         if not os.path.isfile(filepath):
@@ -88,17 +90,40 @@ def perform_capture_integrity_analysis(filepath: str) -> dict:
         else:
             indicators.append("Metadata available")
         
-        # Determine Status
-        recapture_indicators = ["Possible display/screen pattern (Moiré) or repeated high-frequency structure", 
-                                "Possible rectangular boundaries (Screen border)", 
-                                "Possible resampling or unnatural interpolation patterns",
-                                "Possible display glare/reflection"]
-                                
-        detected_recaptures = [ind for ind in indicators if ind in recapture_indicators]
+        # 7. Temporal Analysis
+        if temporal_paths and len(temporal_paths) > 0:
+            temporal_result = analyze_temporal_frames(temporal_paths)
+            temporal_data["frames_analyzed"] = temporal_result.get("frames_analyzed", 0)
+            if temporal_result.get("detected"):
+                for ind in temporal_result.get("indicators", []):
+                    indicators.append(ind)
         
-        if len(detected_recaptures) > 0:
+        # Determine Status
+        has_temporal_pattern = any("temporal" in ind.lower() for ind in indicators)
+        has_spatial_periodicity = "Possible display/screen pattern (Moiré) or repeated high-frequency structure" in indicators
+        has_resampling = "Possible resampling or unnatural interpolation patterns" in indicators
+        has_screen_boundary = "Possible rectangular boundaries (Screen border)" in indicators
+        has_glare = "Possible display glare/reflection" in indicators
+        
+        # Corroboration logic
+        is_recapture = False
+        
+        if has_temporal_pattern and has_spatial_periodicity:
+            is_recapture = True
+        elif has_temporal_pattern and has_resampling:
+            is_recapture = True
+        elif has_temporal_pattern and has_screen_boundary:
+            is_recapture = True
+        elif has_spatial_periodicity and has_resampling:
+            is_recapture = True
+        elif has_spatial_periodicity and has_screen_boundary:
+            is_recapture = True
+        elif has_resampling and has_screen_boundary:
+            is_recapture = True
+        
+        if is_recapture:
             status = "POSSIBLE_RECAPTURE"
-            explanation = "The uploaded image may have been re-presented or captured from another display. This does not prove that the underlying content is manipulated, but direct authenticity assessment may be unreliable."
+            explanation = "The camera captured evidence consistent with a previously displayed or reproduced image. This does not prove that the underlying content is manipulated, but direct authenticity assessment may be unreliable."
         elif "Low image sharpness or heavy compression" in indicators:
             status = "UNCERTAIN"
             explanation = "Capture integrity is uncertain due to low image quality."
@@ -106,11 +131,15 @@ def perform_capture_integrity_analysis(filepath: str) -> dict:
             status = "DIRECT_CAPTURE"
             explanation = "Image appears to be a direct capture with no clear signs of screen reproduction."
             
-        return {
+        result = {
             "status": status,
             "indicators": indicators,
             "explanation": explanation
         }
+        if temporal_data:
+            result["temporal_data"] = temporal_data
+            
+        return result
         
     except Exception as e:
         logger.error(f"Error in capture integrity analysis: {e}")

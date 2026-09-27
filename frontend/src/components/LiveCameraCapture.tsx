@@ -16,6 +16,8 @@ const LiveCameraCapture: React.FC<Props> = ({ onResult, onError }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const [temporalBlobs, setTemporalBlobs] = useState<Blob[]>([]);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
@@ -53,16 +55,31 @@ const LiveCameraCapture: React.FC<Props> = ({ onResult, onError }) => {
     }
   };
 
-  const handleCapture = () => {
+  const captureFrame = (video: HTMLVideoElement, canvas: HTMLCanvasElement): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
+      } else {
+        resolve(null);
+      }
+    });
+  };
+
+  const handleCapture = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     
+    setIsCapturing(true);
     const video = videoRef.current;
     const canvas = canvasRef.current;
+    const frames: Blob[] = [];
     
-    // Set canvas dimensions to match video
+    // Capture the primary frame first
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -72,15 +89,24 @@ const LiveCameraCapture: React.FC<Props> = ({ onResult, onError }) => {
       canvas.toBlob((blob) => {
         if (blob) setCapturedBlob(blob);
       }, 'image/jpeg', 0.9);
-      
-      // Stop stream after capture
-      stopCamera();
     }
+    
+    // Capture ~12 frames over ~1.2 seconds
+    for (let i = 0; i < 12; i++) {
+      const blob = await captureFrame(video, canvas);
+      if (blob) frames.push(blob);
+      await new Promise(r => setTimeout(r, 100)); // 100ms interval
+    }
+    
+    setTemporalBlobs(frames);
+    setIsCapturing(false);
+    stopCamera();
   };
 
   const handleRetake = () => {
     setCapturedImage(null);
     setCapturedBlob(null);
+    setTemporalBlobs([]);
     startCamera();
   };
 
@@ -90,7 +116,8 @@ const LiveCameraCapture: React.FC<Props> = ({ onResult, onError }) => {
     setIsAnalyzing(true);
     try {
       const file = new File([capturedBlob], "live-capture.jpg", { type: "image/jpeg" });
-      const result = await detectImage(file);
+      const temporalFiles = temporalBlobs.map((blob, i) => new File([blob], `frame_${i}.jpg`, { type: "image/jpeg" }));
+      const result = await detectImage(file, temporalFiles);
       onResult(result);
     } catch (err: any) {
       onError(err.message || "Failed to analyze captured image");
@@ -126,9 +153,9 @@ const LiveCameraCapture: React.FC<Props> = ({ onResult, onError }) => {
                 />
                 {!stream && <span style={{ color: '#64748b' }}>Loading camera...</span>}
               </div>
-              <button className="primary-button" onClick={handleCapture} disabled={!stream} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button className="primary-button" onClick={handleCapture} disabled={!stream || isCapturing} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Camera size={18} /> 
-                Capture Image
+                {isCapturing ? "Capturing sequence..." : "Capture Image"}
               </button>
             </>
           ) : (
