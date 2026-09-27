@@ -1,141 +1,200 @@
-# DeepTrace2
+# DeepTrace — KYC Media Authenticity & Risk Analyzer
 
-DeepTrace2 is a **KYC media authenticity and risk analysis tool**. It combines:
+> Detect. Investigate. Explain.
 
-- An **AI deepfake/synthetic-media detector** (EfficientNet-B7 for images/video, RawNet for audio), and
-- A set of **classical forensic checks** for images (Error Level Analysis, noise/residual analysis, FFT frequency analysis, face & eye consistency)
+DeepTrace is an explainable KYC (Know Your Customer) media verification system that combines AI-based media detection, digital forensic analysis, capture-integrity analysis, and conservative evidence fusion to support human KYC review.
 
-...fused into a single, explainable risk report (`LOW_RISK` / `REVIEW_REQUIRED` / `HIGH_RISK`) intended to support manual KYC review, not replace it.
+## ⚠️ The Problem
+In modern KYC and identity verification, simply classifying an uploaded image as "REAL" or "FAKE" using an AI model is insufficient. Attackers frequently bypass simple verifications through:
+- **AI-generated media** (Deepfakes, Stable Diffusion).
+- **Manipulated images** (Face swaps, digital alterations).
+- **Screen Recapture / Re-presented Media** (Photographing a digital screen displaying a fraudulent ID or face).
+- **Recompression/Editing** (Hiding manipulation traces).
 
-See [INTEGRATION_ANALYSIS.md](INTEGRATION_ANALYSIS.md) and [VALIDATION_REPORT.md](VALIDATION_REPORT.md) for background on how the underlying AI model was sourced and validated.
+When an AI model analyzes a photograph of a phone screen, it may genuinely detect the real camera sensor noise and classify the image as "REAL", bypassing traditional AI deepfake detectors. DeepTrace solves this by treating *content authenticity* and *capture integrity* as separate but equally critical components.
 
-> **Disclaimer**: This is a prototype. The AI model checkpoints are third-party pretrained weights (see [models/checkpoints/NOTICE.md](models/checkpoints/NOTICE.md)), not trained or scientifically validated by this project. Risk scores are operational heuristics, not calibrated probabilities. Do not use this as the sole basis for a real identity/fraud decision.
-
----
-
-## Architecture
+## 💡 The Solution
+DeepTrace utilizes a multi-layered, explainable architecture rather than relying on a single "black box" model.
 
 ```
+KYC Media
+    ↓
+AI Detection (Deepfake / Synthetic signal)
+    ↓
+Digital Forensics (ELA, Noise, FFT, Face/Eye)
+    ↓
+Capture Integrity (Screen/Moiré, Interpolation, Glare)
+    ↓
+Evidence Fusion (Rule-based corroboration)
+    ↓
+Explainable KYC Risk Report (LOW_RISK, REVIEW_REQUIRED, HIGH_RISK)
+```
+
+## ✨ Key Features
+- **AI-Based Media Detection**: Evaluates Image, Video, and Audio media for synthetic generation traces using PyTorch/ONNX models.
+- **Error Level Analysis (ELA)**: Detects inconsistent compression levels indicating possible splicing.
+- **Noise/Residual Analysis**: Extracts high-frequency camera noise to find inconsistencies.
+- **FFT / Frequency Analysis**: Analyzes the frequency domain for unnatural spectral patterns.
+- **Face & Eye Analysis**: Checks facial feature consistency, eye alignment, and illumination.
+- **Capture Integrity Analysis**: Evaluates the image for signs of being a photograph of a digital screen or printed paper.
+  - *Spatial Periodicity (Moiré patterns)*
+  - *Resampling/Interpolation artifacts*
+  - *Screen Boundary detection*
+  - *Display Glare detection*
+  - *Image Quality checks*
+  - *Temporal Display analysis (if live video)*
+- **Live Camera Capture**: The frontend supports live webcam capture for direct KYC verification.
+- **Evidence Fusion**: Fuses multiple forensic signals and AI predictions using conservative, transparent heuristics to assign a final risk tier.
+- **Explainable Risk Report**: Generates a human-readable report detailing exactly *why* a risk level was assigned.
+
+## 🔍 Forensic Modules
+These forensic modules provide *supporting signals*, not standalone proof of manipulation:
+- **ELA (Error Level Analysis)**: Re-saves the image at a known quality and compares it to the original. Spliced regions often compress differently.
+- **Noise/Residual**: Isolates high-frequency noise using denoising filters. AI-generated images or spliced regions often lack natural camera sensor noise.
+- **FFT (Fast Fourier Transform)**: Converts the image to the frequency domain to identify periodic artifacts common in GANs or unnatural sharpening.
+- **Face/Eye Consistency**: Detects asymmetric lighting or unnatural eye alignment frequently seen in poor deepfakes.
+- **Capture Integrity**: A specialized module to detect re-presented media. Photographing an image displayed on another device creates a *new* real camera photograph. Capture integrity looks for the artifacts of the display medium (pixels, screen edges, moiré).
+
+## ⚖️ Evidence Fusion
+DeepTrace avoids arbitrary weighted "authenticity scores." Instead, it relies on conservative rule-based evidence fusion to categorize risk.
+
+It evaluates:
+- **AI Evidence**: Strong, Moderate, or Weak signal.
+- **Supporting / Conflicting Signals**: Do the forensic modules agree with the AI?
+- **Unavailable Signals**: Are certain checks unavailable (e.g., no face detected)?
+
+**Supported Risk Outcomes:**
+- `LOW_RISK`: Strong AI "REAL" prediction + clean forensics + clean capture integrity + sufficient evidence.
+- `REVIEW_REQUIRED`: Insufficient evidence, mixed signals, or possible capture recapture.
+- `HIGH_RISK`: Strong AI "FAKE" prediction + supporting forensic anomalies.
+
+## 📊 Explainability
+Every API response generates a dynamic, human-readable report explaining:
+- The primary AI result and confidence.
+- Which forensic findings were anomalous vs. clean.
+- Any capture integrity concerns.
+- A summary of supporting/conflicting/unavailable evidence.
+- The final reviewer recommendation.
+
+## 🏗️ Architecture
+
+```
+  React + TypeScript + Vite (Frontend)
+                  ↓
+          FastAPI (Backend)
+                  ↓
+        ┌─────────┼─────────┐
+        ↓         ↓         ↓
+    AI Model  Forensics  Capture
+   (PyTorch) (OpenCV)   Integrity
+        └─────────┼─────────┘
+                  ↓
+           Evidence Fusion
+                  ↓
+           KYC Risk Report
+```
+
+## 🛠️ Technology Stack
+
+| Component | Technologies |
+| :--- | :--- |
+| **Frontend** | React, TypeScript, Vite |
+| **Backend** | Python 3.9, FastAPI, Uvicorn |
+| **AI/ML** | PyTorch, ONNX, ONNX2PyTorch, timm |
+| **Computer Vision** | OpenCV (`opencv-python-headless`), NumPy, SciPy |
+| **Storage** | Git LFS (for model checkpoints) |
+
+## 📁 Project Structure
+```text
 DeepTrace2/
-├── backend/                FastAPI service (AI models + forensics)
-│   ├── app.py               Entry point: loads models, registers routes
-│   ├── models_arch/         Model architecture definitions
-│   ├── routes/               API endpoints (image, video, audio, health)
-│   ├── services/              Detectors + forensic analyzers + evidence fusion
-│   └── utils/                 File upload handling
-├── frontend/                React + TypeScript + Vite SPA
-├── models/checkpoints/       AI model weights (efficientnet.onnx, model.pth) — via Git LFS
-├── requirements.txt          Backend Python dependencies
-└── haarcascade_*.xml         OpenCV Haar cascades (bundled with opencv-python, kept here for reference)
+├── backend/
+│   ├── app.py                     # FastAPI application entrypoint
+│   ├── routes/                    # API route handlers
+│   ├── services/                  # Forensic & AI logic
+│   ├── models_arch/               # PyTorch model definitions
+│   └── tests/                     # Test suite
+├── frontend/
+│   ├── src/                       # React source code
+│   └── package.json
+├── models/
+│   └── checkpoints/               # Git LFS tracked AI models (.pth, .onnx)
+└── requirements.txt               # Python dependencies
 ```
 
-Flow: the frontend uploads a file → `POST /api/detect/{image,video,audio}` → AI model inference → (images only) ELA + noise + FFT + face/eye forensics → evidence fusion produces a risk level and explanation → frontend renders the report.
+## 🚀 Local Setup
 
----
-
-## Prerequisites
-
-| Requirement | Notes |
-|---|---|
-| **Python 3.11** | Required specifically. Newer Pythons (3.13/3.14) do not yet have compatible wheels for `torch`/`onnx2pytorch`/some other deps — using them will cause confusing install failures. Check available versions with `py -0` (Windows) or `python3.11 --version` (macOS/Linux). |
-| **Node.js 18+** | Tested with Node 24. |
-| **Git LFS** | Model checkpoints are stored via Git LFS. Install from [git-lfs.com](https://git-lfs.com/) **before** cloning, or run `git lfs pull` after cloning if the files under `models/checkpoints/` look tiny (a few hundred bytes = LFS pointer, not the real weights). |
-
----
-
-## Setup
-
-### 1. Clone
-
+### 1. Clone & Pull Models
 ```bash
-git lfs install          # one-time, per machine
 git clone https://github.com/krutthiikaaa/DeepTrace2.git
 cd DeepTrace2
+git lfs install
+git lfs pull
 ```
 
-If you already cloned before installing Git LFS, run `git lfs pull` to fetch the real checkpoint files.
-
-### 2. Backend
-
-Create a virtual environment with **Python 3.11** and install dependencies:
-
-```powershell
-# Windows
-py -3.11 -m venv .venv
-.venv\Scripts\activate
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
+### 2. Backend Setup
 ```bash
-# macOS / Linux
-python3.11 -m venv .venv
+python3.9 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
 pip install -r requirements.txt
+python -m uvicorn backend.app:app --reload
 ```
+*The backend will be available at `http://127.0.0.1:8000`*
 
-Run the API from the **repo root** (it's imported as the `backend` package):
-
-```bash
-uvicorn backend.app:app --host 0.0.0.0 --port 8000
-```
-
-On startup you should see `Image model loaded successfully.` and `Audio model loaded successfully.`. Verify with:
-
-```bash
-curl http://localhost:8000/api/health
-# {"status":"ok","models_loaded":true}
-```
-
-If `models_loaded` is `false`, see [Troubleshooting](#troubleshooting).
-
-### 3. Frontend
-
-In a separate terminal:
-
+### 3. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+*The frontend will be available at `http://localhost:5173`*
 
-Open the printed URL (default `http://localhost:5173`). `frontend/.env` already points the UI at `http://localhost:8000/api`; change `VITE_API_URL` there if your backend runs elsewhere.
-
----
-
-## Using the app
-
-1. Open the frontend in a browser.
-2. Pick a tab (Image / Video / Audio) and upload a file.
-3. Click Analyze. Images get the full risk report (AI signal + forensic evidence + explanation); video/audio return the raw AI prediction and confidence.
-
----
-
-## Troubleshooting
-
-- **`models_loaded: false` at `/api/health`** — the checkpoint files are missing or are still LFS pointer stubs. Check `models/checkpoints/efficientnet.onnx` is ~23MB and `models/checkpoints/model.pth` is ~117MB (not a few hundred bytes); if they're tiny, run `git lfs pull`.
-- **`pip install` fails on `torch`/`onnx2pytorch`/etc.** — you're likely on a Python version without prebuilt wheels yet. Recreate the venv with Python 3.11.
-- **Face & eye analysis returns `"unavailable"` / mentions `CascadeClassifier`** — this happens on `opencv-python` 5.x, which doesn't expose `cv2.CascadeClassifier`. `requirements.txt` pins `opencv-python<5`; if you still hit this, delete your venv and reinstall.
-- **Backend fails to import `backend.routes.video`** — make sure you're on a commit that includes the video route fix (a corrupted import line was removed); update to the latest `main`.
-- **Git LFS quota errors when cloning** — GitHub's free LFS tier is 1GB storage and 1GB bandwidth/month, shared across everyone cloning this repo. If clones start failing with an LFS bandwidth error, the monthly quota has likely been exhausted; it resets monthly, or a data pack can be purchased on the repo's billing settings.
-
----
-
-## Tests
-
-- `backend/tests/test_forensics.py` — self-contained pytest unit tests for the ELA module.
-- `backend/tests/test_api.py`, `test_endpoints.py`, `test_scenarios.py` — integration/smoke scripts that expect a running backend; some contain machine-specific paths from earlier development and may need small edits (asset paths, `sys.path`) to run in a new environment.
-
-Run the pytest-based tests with:
-
-```bash
-pip install pytest requests
-pytest backend/tests/test_forensics.py
+## ⚙️ Environment Configuration
+To connect the frontend to a specific backend (useful for deployment), create a `frontend/.env` file:
+```env
+VITE_API_URL=http://127.0.0.1:8000/api
 ```
 
+## 🔌 API Endpoints
+- `GET /api/health`: Returns system status and verifies if models are loaded into memory.
+- `POST /api/detect/image`: Accepts an image upload and returns a full JSON risk assessment and forensic report.
+- `POST /api/detect/video`: Accepts a video upload, extracts frames, and analyzes them for temporal and spatial anomalies.
+- `POST /api/detect/audio`: Accepts an audio file and analyzes it for synthetic voice generation.
+
+
+
+## 🧪 Testing
+The backend test suite verifies the API routes, evidence fusion, and capture integrity logic.
+```bash
+pytest backend/tests/
+```
+
+## 📸 Demo
+*Note: Screenshots will be added to `docs/screenshots/`.*
+- [Analysis Dashboard](docs/screenshots/analysis.png)
+- [KYC Risk Report](docs/screenshots/risk-report.png)
+- [Forensic Visualizations](docs/screenshots/forensics.png)
+
+## 🎯 Use Cases
+- **Digital Banking & Fintech Onboarding**: Verifying user-uploaded IDs and selfies.
+- **Identity Verification (KYC)**: Supporting human compliance teams with forensic data.
+- **Fraud Investigation**: Analyzing suspected tampered documents or deepfakes.
+- **Digital Trust & Safety**: Verifying media integrity for high-stakes platforms.
+
+## 🛑 Limitations
+- **AI Confidence is NOT Proof**: A high AI confidence score is a statistical prediction, not absolute proof of authenticity or fraud.
+- **Forensic False Positives**: Compression artifacts (ELA) or noise anomalies can occur naturally in heavily compressed or poorly lit genuine images.
+- **Capture Integrity is Not Perfect**: Detecting a photograph of a screen relies on specific artifacts (Moiré, pixels, glare) which can be obscured by distance, focus, or high-quality screens.
+- **Metadata**: EXIF data is easily stripped by social media platforms and messaging apps.
+- **Human Review**: DeepTrace is a decision-support tool. Uncertain or conflicting cases **require human review**.
+
+## 🔮 Future Scope
+- Stronger presentation-attack detection (PAD).
+- Document authenticity analysis and OCR consistency checks.
+- Face-to-ID matching and liveness detection.
+- Audit trails and PDF report generation for compliance officers.
+
+## ⚖️ Disclaimer
+*DeepTrace is a research/prototype decision-support system. Its outputs constitute supporting forensic evidence and risk signals, rather than definitive proof of fraud or authenticity. It is designed to assist, not replace, human compliance review.*
+
 ---
-
-## License
-
-No license file is currently specified for this repository. The bundled model checkpoints in `models/checkpoints/` are MIT-licensed third-party weights — see [models/checkpoints/NOTICE.md](models/checkpoints/NOTICE.md) for the full notice.
+*Built as a hackathon project focused on AI-assisted media authenticity and KYC security.*
