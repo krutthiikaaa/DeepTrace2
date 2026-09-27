@@ -178,9 +178,13 @@ def perform_evidence_fusion(prediction: str, confidence: float, forensics: dict,
             explanation_parts.append(f"Modules ({', '.join(unavailable_sources)}) were unavailable.")
             
         if risk_level == "HIGH_RISK":
+            if capture_integrity and capture_integrity.get("status") in ["POSSIBLE_RECAPTURE", "UNCERTAIN"]:
+                explanation_parts.append("Furthermore, capture integrity analysis indicates possible re-presented media or is uncertain.")
             explanation_parts.append("The available evidence supports elevated risk, but automated authenticity cannot be guaranteed.")
         else:
-            explanation_parts.append("The available forensic evidence is insufficient or mixed. Manual KYC review is recommended.")
+            if capture_integrity and capture_integrity.get("status") in ["POSSIBLE_RECAPTURE", "UNCERTAIN"]:
+                explanation_parts.append("Furthermore, capture integrity analysis indicates possible re-presented media or is uncertain.")
+            explanation_parts.append("The available evidence is insufficient or mixed. Manual KYC review is recommended.")
             
     else: # REAL
         if anomaly_sources:
@@ -194,7 +198,9 @@ def perform_evidence_fusion(prediction: str, confidence: float, forensics: dict,
         if risk_level == "LOW_RISK":
             explanation_parts.append("This does not guarantee authenticity; automated analysis should be treated as supporting evidence.")
         else:
-            explanation_parts.append("The available forensic evidence is insufficient or mixed. Manual KYC review is recommended.")
+            if capture_integrity and capture_integrity.get("status") in ["POSSIBLE_RECAPTURE", "UNCERTAIN"]:
+                explanation_parts.append("Furthermore, capture integrity analysis indicates possible re-presented media or is uncertain.")
+            explanation_parts.append("The available evidence is insufficient or mixed. Manual KYC review is recommended.")
             
     explanation = " ".join(explanation_parts)
     
